@@ -1,26 +1,52 @@
 // app.js
 
-// Przykładowe projekty
-const projects = ["Projekt A", "Projekt B", "Bez projektu"];
+let apiUrl = "";
+let apiKey = "";
 
-// Funkcja do załadowania aktywności do tabeli
-function loadActivities() {
+// Funkcja do pobrania URL i API Key z formularza
+function getApiUrlAndKey() {
+    apiUrl = document.getElementById('apiUrl').value.trim();
+    apiKey = document.getElementById('apiKey').value.trim();
+
+    if (!apiUrl || !apiKey) {
+        alert("Proszę wprowadzić URL API Kimai i klucz API.");
+        return false;
+    }
+    return true;
+}
+
+// Funkcja do załadowania aktywności z API Kimai
+async function loadActivities() {
+    if (!getApiUrlAndKey()) return;
+
+    const response = await fetch(`${apiUrl}/api/activities`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        alert("Błąd podczas ładowania aktywności.");
+        return;
+    }
+
+    const data = await response.json();
+    displayActivities(data);
+}
+
+// Funkcja do wyświetlenia aktywności w tabeli
+function displayActivities(activities) {
     const tableBody = document.querySelector('#activityTable tbody');
     tableBody.innerHTML = ''; // Czyścimy tabelę przed dodaniem nowych danych
-
-    // Przykładowe dane
-    const activities = [
-        { project: "Projekt A", name: "Aktywność 1", description: "Opis 1", billable: true, rate: 100 },
-        { project: "Projekt B", name: "Aktywność 2", description: "Opis 2", billable: false, rate: 80 },
-        { project: "Bez projektu", name: "Aktywność 3", description: "Opis 3", billable: true, rate: 120 }
-    ];
 
     activities.forEach((activity, index) => {
         const row = document.createElement('tr');
 
         // Projekt (select)
         const projectCell = document.createElement('td');
-        const projectSelect = createProjectSelect(activity.project);
+        const projectSelect = createProjectSelect(activity.project || "Bez projektu");
         projectCell.appendChild(projectSelect);
 
         // Aktywność (input)
@@ -30,17 +56,17 @@ function loadActivities() {
 
         // Opis (input)
         const descriptionCell = document.createElement('td');
-        const descriptionInput = createEditableInput(activity.description);
+        const descriptionInput = createEditableInput(activity.description || "");
         descriptionCell.appendChild(descriptionInput);
 
         // Billable (checkbox)
         const billableCell = document.createElement('td');
-        const billableCheckbox = createBillableCheckbox(activity.billable);
+        const billableCheckbox = createBillableCheckbox(activity.billable || false);
         billableCell.appendChild(billableCheckbox);
 
         // Stawka (input)
         const rateCell = document.createElement('td');
-        const rateInput = createEditableInput(activity.rate);
+        const rateInput = createEditableInput(activity.rate || "");
         rateCell.appendChild(rateInput);
 
         // Akcje (przycisk usuwania)
@@ -64,6 +90,8 @@ function loadActivities() {
 function createProjectSelect(selectedProject) {
     const select = document.createElement('select');
     select.className = 'form-select';
+    const projects = ["Projekt A", "Projekt B", "Bez projektu"]; // Można to zmienić na dynamiczne projekty
+
     projects.forEach(project => {
         const option = document.createElement('option');
         option.value = project;
@@ -73,6 +101,7 @@ function createProjectSelect(selectedProject) {
         }
         select.appendChild(option);
     });
+
     return select;
 }
 
@@ -108,12 +137,12 @@ function deleteRow(index) {
     tableBody.deleteRow(index);
 }
 
-// Funkcja do dodawania nowego wiersza
+// Funkcja do dodawania nowego pustego wiersza
 function addRow() {
     const tableBody = document.querySelector('#activityTable tbody');
     const newRow = document.createElement('tr');
 
-    // Nowe komórki
+    // Nowe komórki (puste)
     const projectCell = document.createElement('td');
     const projectSelect = createProjectSelect("Bez projektu");
     projectCell.appendChild(projectSelect);

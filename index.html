@@ -18,7 +18,7 @@
 
 <body>
     <div class="container my-4">
-        <h1 class="text-center">Zarządzanie Aktywnościami</h1>
+        <h1 class="text-center">Zarządzanie Aktywnościami Kimai</h1>
 
         <!-- Formularz z polami do edycji URL API i API Key -->
         <div class="mb-4">
@@ -32,10 +32,7 @@
                     <input type="text" id="apiKey" class="form-control" placeholder="Wpisz klucz API" />
                 </div>
             </div>
-        </div>
-
-        <div class="mb-4">
-            <button class="btn btn-primary" onclick="addRow()">Dodaj nową aktywność</button>
+            <button class="btn btn-primary mt-2" onclick="loadActivities()">Załaduj Aktywności</button>
         </div>
 
         <table class="table table-bordered" id="activityTable">
@@ -53,6 +50,8 @@
                 <!-- Aktywności zostaną załadowane tutaj -->
             </tbody>
         </table>
+
+        <button class="btn btn-success" onclick="addRow()">Dodaj nową aktywność</button>
     </div>
 
     <!-- Bootstrap 5 JS i Popper.js -->
