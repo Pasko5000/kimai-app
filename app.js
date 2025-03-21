@@ -19,21 +19,28 @@ function getApiUrlAndKey() {
 async function loadActivities() {
     if (!getApiUrlAndKey()) return;
 
-    const response = await fetch(`${apiUrl}/api/activities`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-        },
-    });
+    console.log("Pobieranie aktywności z:", apiUrl);
+    try {
+        const response = await fetch(`${apiUrl}/api/activities`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+        });
 
-    if (!response.ok) {
-        alert("Błąd podczas ładowania aktywności.");
-        return;
+        if (!response.ok) {
+            console.error("Błąd podczas ładowania aktywności:", response.statusText);
+            alert("Błąd podczas ładowania aktywności.");
+            return;
+        }
+
+        const data = await response.json();
+        console.log("Załadowane aktywności:", data);
+        displayActivities(data);
+    } catch (error) {
+        console.error("Wyjątek podczas ładowania aktywności:", error);
     }
-
-    const data = await response.json();
-    displayActivities(data);
 }
 
 // Funkcja do wyświetlenia aktywności w tabeli
@@ -71,7 +78,11 @@ function displayActivities(activities) {
 
         // Akcje (przycisk usuwania)
         const actionsCell = document.createElement('td');
-        const deleteButton = createDeleteButton(index);
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger btn-sm';
+        deleteButton.textContent = 'Usuń';
+        // Upewnij się, że activity posiada właściwość 'id'
+        deleteButton.onclick = () => deleteRow(activity.id, row);
         actionsCell.appendChild(deleteButton);
 
         // Dodanie komórek do wiersza
@@ -122,19 +133,27 @@ function createBillableCheckbox(checked) {
     return checkbox;
 }
 
-// Funkcja do tworzenia przycisku usuwania
-function createDeleteButton(index) {
-    const button = document.createElement('button');
-    button.className = 'btn btn-danger btn-sm';
-    button.textContent = 'Usuń';
-    button.onclick = () => deleteRow(index);
-    return button;
-}
-
-// Funkcja do usuwania wiersza
-function deleteRow(index) {
-    const tableBody = document.querySelector('#activityTable tbody');
-    tableBody.deleteRow(index);
+// Funkcja do usuwania wiersza z API i UI
+async function deleteRow(activityId, rowElement) {
+    console.log(`Próba usunięcia rekordu o id: ${activityId}`);
+    try {
+        const response = await fetch(`${apiUrl}/api/activities/${activityId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            console.error("Błąd podczas usuwania rekordu:", response.statusText);
+            alert("Błąd podczas usuwania rekordu.");
+            return;
+        }
+        console.log(`Rekord ${activityId} został usunięty z serwera.`);
+        rowElement.remove();
+    } catch (error) {
+        console.error("Wyjątek podczas usuwania rekordu:", error);
+    }
 }
 
 // Funkcja do dodawania nowego pustego wiersza
@@ -164,10 +183,16 @@ function addRow() {
     rateCell.appendChild(rateInput);
 
     const actionsCell = document.createElement('td');
-    const deleteButton = createDeleteButton(tableBody.rows.length);
+    // Dla nowo dodanego wiersza nie mamy jeszcze id, więc usuwanie działa tylko na UI
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'btn btn-danger btn-sm';
+    deleteButton.textContent = 'Usuń';
+    deleteButton.onclick = () => {
+        console.log("Usuwanie wiersza z UI (rekord nie zapisany w bazie)");
+        newRow.remove();
+    };
     actionsCell.appendChild(deleteButton);
 
-    // Dodanie komórek do wiersza
     newRow.appendChild(projectCell);
     newRow.appendChild(activityCell);
     newRow.appendChild(descriptionCell);
