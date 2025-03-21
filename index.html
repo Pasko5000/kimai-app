@@ -20,7 +20,20 @@
     <div class="container my-4">
         <h1 class="text-center">Zarządzanie Aktywnościami</h1>
 
-        <!-- Formularz z polami do edycji -->
+        <!-- Formularz z polami do edycji URL API i API Key -->
+        <div class="mb-4">
+            <div class="row">
+                <div class="col">
+                    <label for="apiUrl" class="form-label">URL do API Kimai:</label>
+                    <input type="text" id="apiUrl" class="form-control" placeholder="Wpisz URL API Kimai" />
+                </div>
+                <div class="col">
+                    <label for="apiKey" class="form-label">Klucz API:</label>
+                    <input type="text" id="apiKey" class="form-control" placeholder="Wpisz klucz API" />
+                </div>
+            </div>
+        </div>
+
         <div class="mb-4">
             <button class="btn btn-primary" onclick="addRow()">Dodaj nową aktywność</button>
         </div>
