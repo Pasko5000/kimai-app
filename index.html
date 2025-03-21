@@ -1,51 +1,53 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zarządzanie Aktywnościami Kimai</title>
+    <title>Zarządzanie Aktywnościami - Kimai</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        button {
-            margin-top: 10px;
+        .table th, .table td {
+            vertical-align: middle;
         }
     </style>
 </head>
+
 <body>
+    <div class="container my-4">
+        <h1 class="text-center">Zarządzanie Aktywnościami</h1>
 
-    <h1>Zarządzanie Aktywnościami</h1>
+        <!-- Formularz z polami do edycji -->
+        <div class="mb-4">
+            <button class="btn btn-primary" onclick="addRow()">Dodaj nową aktywność</button>
+        </div>
 
-    <label for="apiUrl">URL do API Kimai:</label>
-    <input type="text" id="apiUrl" placeholder="Wpisz URL API Kimai" style="width: 300px;"/><br/><br/>
+        <table class="table table-bordered" id="activityTable">
+            <thead>
+                <tr>
+                    <th>Projekt</th>
+                    <th>Aktywność</th>
+                    <th>Opis</th>
+                    <th>Billable</th>
+                    <th>Stawka</th>
+                    <th>Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aktywności zostaną załadowane tutaj -->
+            </tbody>
+        </table>
+    </div>
 
-    <label for="apiKey">Klucz API:</label>
-    <input type="text" id="apiKey" placeholder="Wpisz klucz API" style="width: 300px;"/><br/><br/>
+    <!-- Bootstrap 5 JS i Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 
-    <button onclick="loadActivities()">Załaduj Aktywności</button><br/><br/>
-
-    <table id="activityTable">
-        <thead>
-            <tr>
-                <th>Projekt</th>
-                <th>Aktywność</th>
-                <th>Edytuj</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Aktywności zostaną załadowane tutaj -->
-        </tbody>
-    </table>
-
+    <!-- Twój skrypt JS -->
     <script src="app.js"></script>
 </body>
+
 </html>

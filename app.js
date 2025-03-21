@@ -1,110 +1,153 @@
-// Funkcja do pobrania danych z formularza
-function getApiUrlAndKey() {
-    const apiUrl = document.getElementById('apiUrl').value.trim();
-    const apiKey = document.getElementById('apiKey').value.trim();
+// app.js
 
-    if (!apiUrl || !apiKey) {
-        alert("Proszę wprowadzić URL API Kimai i klucz API.");
-        return null;
-    }
+// Przykładowe projekty
+const projects = ["Projekt A", "Projekt B", "Bez projektu"];
 
-    return { apiUrl, apiKey };
-}
-
-// Funkcja do załadowania aktywności
-async function loadActivities() {
-    const apiData = getApiUrlAndKey();
-    if (!apiData) return;
-
-    const { apiUrl, apiKey } = apiData;
-
-    try {
-        const response = await fetch(`${apiUrl}/api/activities`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error("Błąd ładowania aktywności");
-        }
-
-        const data = await response.json();
-        displayActivities(data);
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-// Funkcja do wyświetlenia aktywności w tabeli
-function displayActivities(activities) {
+// Funkcja do załadowania aktywności do tabeli
+function loadActivities() {
     const tableBody = document.querySelector('#activityTable tbody');
     tableBody.innerHTML = ''; // Czyścimy tabelę przed dodaniem nowych danych
 
-    activities.forEach(activity => {
+    // Przykładowe dane
+    const activities = [
+        { project: "Projekt A", name: "Aktywność 1", description: "Opis 1", billable: true, rate: 100 },
+        { project: "Projekt B", name: "Aktywność 2", description: "Opis 2", billable: false, rate: 80 },
+        { project: "Bez projektu", name: "Aktywność 3", description: "Opis 3", billable: true, rate: 120 }
+    ];
+
+    activities.forEach((activity, index) => {
         const row = document.createElement('tr');
-        
+
+        // Projekt (select)
         const projectCell = document.createElement('td');
-        projectCell.textContent = activity.project ? activity.project.name : "Bez projektu";
+        const projectSelect = createProjectSelect(activity.project);
+        projectCell.appendChild(projectSelect);
 
+        // Aktywność (input)
         const activityCell = document.createElement('td');
-        activityCell.textContent = activity.name;
+        const activityInput = createEditableInput(activity.name);
+        activityCell.appendChild(activityInput);
 
-        const editCell = document.createElement('td');
-        const editButton = document.createElement('button');
-        editButton.textContent = 'Edytuj';
-        editButton.onclick = () => editActivity(activity.id, activity.name, activity.project?.name);
-        editCell.appendChild(editButton);
+        // Opis (input)
+        const descriptionCell = document.createElement('td');
+        const descriptionInput = createEditableInput(activity.description);
+        descriptionCell.appendChild(descriptionInput);
 
+        // Billable (checkbox)
+        const billableCell = document.createElement('td');
+        const billableCheckbox = createBillableCheckbox(activity.billable);
+        billableCell.appendChild(billableCheckbox);
+
+        // Stawka (input)
+        const rateCell = document.createElement('td');
+        const rateInput = createEditableInput(activity.rate);
+        rateCell.appendChild(rateInput);
+
+        // Akcje (przycisk usuwania)
+        const actionsCell = document.createElement('td');
+        const deleteButton = createDeleteButton(index);
+        actionsCell.appendChild(deleteButton);
+
+        // Dodanie komórek do wiersza
         row.appendChild(projectCell);
         row.appendChild(activityCell);
-        row.appendChild(editCell);
+        row.appendChild(descriptionCell);
+        row.appendChild(billableCell);
+        row.appendChild(rateCell);
+        row.appendChild(actionsCell);
 
         tableBody.appendChild(row);
     });
 }
 
-// Funkcja do edycji aktywności
-function editActivity(id, currentName, currentProject) {
-    const newName = prompt("Wprowadź nową nazwę aktywności:", currentName);
-    const newProject = prompt("Wprowadź nowy projekt (lub zostaw puste dla braku projektu):", currentProject);
-
-    if (newName) {
-        updateActivity(id, newName, newProject);
-    }
-}
-
-// Funkcja do aktualizacji aktywności przez API
-async function updateActivity(id, newName, newProject) {
-    const apiData = getApiUrlAndKey();
-    if (!apiData) return;
-
-    const { apiUrl, apiKey } = apiData;
-
-    const updatedData = {
-        name: newName,
-        project: newProject ? { name: newProject } : null,
-    };
-
-    try {
-        const response = await fetch(`${apiUrl}/api/activities/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updatedData),
-        });
-
-        if (!response.ok) {
-            throw new Error("Błąd aktualizacji aktywności");
+// Funkcja do tworzenia pola wyboru projektu
+function createProjectSelect(selectedProject) {
+    const select = document.createElement('select');
+    select.className = 'form-select';
+    projects.forEach(project => {
+        const option = document.createElement('option');
+        option.value = project;
+        option.textContent = project;
+        if (project === selectedProject) {
+            option.selected = true;
         }
-
-        alert("Aktywność została zaktualizowana");
-        loadActivities(); // Ponownie załaduj aktywności
-    } catch (error) {
-        console.error(error);
-    }
+        select.appendChild(option);
+    });
+    return select;
 }
+
+// Funkcja do tworzenia edytowalnego inputa
+function createEditableInput(value) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = value;
+    input.className = 'form-control';
+    return input;
+}
+
+// Funkcja do tworzenia checkboxa dla Billable
+function createBillableCheckbox(checked) {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = checked;
+    return checkbox;
+}
+
+// Funkcja do tworzenia przycisku usuwania
+function createDeleteButton(index) {
+    const button = document.createElement('button');
+    button.className = 'btn btn-danger btn-sm';
+    button.textContent = 'Usuń';
+    button.onclick = () => deleteRow(index);
+    return button;
+}
+
+// Funkcja do usuwania wiersza
+function deleteRow(index) {
+    const tableBody = document.querySelector('#activityTable tbody');
+    tableBody.deleteRow(index);
+}
+
+// Funkcja do dodawania nowego wiersza
+function addRow() {
+    const tableBody = document.querySelector('#activityTable tbody');
+    const newRow = document.createElement('tr');
+
+    // Nowe komórki
+    const projectCell = document.createElement('td');
+    const projectSelect = createProjectSelect("Bez projektu");
+    projectCell.appendChild(projectSelect);
+
+    const activityCell = document.createElement('td');
+    const activityInput = createEditableInput('');
+    activityCell.appendChild(activityInput);
+
+    const descriptionCell = document.createElement('td');
+    const descriptionInput = createEditableInput('');
+    descriptionCell.appendChild(descriptionInput);
+
+    const billableCell = document.createElement('td');
+    const billableCheckbox = createBillableCheckbox(false);
+    billableCell.appendChild(billableCheckbox);
+
+    const rateCell = document.createElement('td');
+    const rateInput = createEditableInput('');
+    rateCell.appendChild(rateInput);
+
+    const actionsCell = document.createElement('td');
+    const deleteButton = createDeleteButton(tableBody.rows.length);
+    actionsCell.appendChild(deleteButton);
+
+    // Dodanie komórek do wiersza
+    newRow.appendChild(projectCell);
+    newRow.appendChild(activityCell);
+    newRow.appendChild(descriptionCell);
+    newRow.appendChild(billableCell);
+    newRow.appendChild(rateCell);
+    newRow.appendChild(actionsCell);
+
+    tableBody.appendChild(newRow);
+}
+
+// Załaduj dane przy starcie
+loadActivities();
