@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zarządzanie Aktywnościami Kimai</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Zarządzanie Aktywnościami</h1>
+
+    <label for="apiUrl">URL do API Kimai:</label>
+    <input type="text" id="apiUrl" placeholder="Wpisz URL API Kimai" style="width: 300px;"/><br/><br/>
+
+    <label for="apiKey">Klucz API:</label>
+    <input type="text" id="apiKey" placeholder="Wpisz klucz API" style="width: 300px;"/><br/><br/>
+
+    <button onclick="loadActivities()">Załaduj Aktywności</button><br/><br/>
+
+    <table id="activityTable">
+        <thead>
+            <tr>
+                <th>Projekt</th>
+                <th>Aktywność</th>
+                <th>Edytuj</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aktywności zostaną załadowane tutaj -->
+        </tbody>
+    </table>
+
+    <script src="app.js"></script>
+</body>
+</html>
