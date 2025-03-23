@@ -3,7 +3,7 @@
 let apiUrl = "";
 let apiKey = "";
 
-// Funkcja do pobrania URL i API Key z formularza
+// Pobranie URL i API Key z formularza
 function getApiUrlAndKey() {
     apiUrl = document.getElementById('apiUrl').value.trim();
     apiKey = document.getElementById('apiKey').value.trim();
@@ -15,7 +15,7 @@ function getApiUrlAndKey() {
     return true;
 }
 
-// Funkcja do załadowania aktywności z API Kimai
+// Załadowanie aktywności z API Kimai
 async function loadActivities() {
     if (!getApiUrlAndKey()) return;
 
@@ -43,13 +43,14 @@ async function loadActivities() {
     }
 }
 
-// Funkcja do wyświetlenia aktywności w tabeli
+// Wyświetlenie aktywności w tabeli
 function displayActivities(activities) {
     const tableBody = document.querySelector('#activityTable tbody');
-    tableBody.innerHTML = ''; // Czyścimy tabelę przed dodaniem nowych danych
+    tableBody.innerHTML = ''; // Czyścimy tabelę
 
-    activities.forEach((activity, index) => {
+    activities.forEach((activity) => {
         const row = document.createElement('tr');
+        row.dataset.id = activity.id; // zapisujemy id rekordu
 
         // Projekt (select)
         const projectCell = document.createElement('td');
@@ -76,16 +77,15 @@ function displayActivities(activities) {
         const rateInput = createEditableInput(activity.rate || "");
         rateCell.appendChild(rateInput);
 
-        // Akcje (przycisk usuwania)
+        // Akcje (przyciski)
         const actionsCell = document.createElement('td');
         const deleteButton = document.createElement('button');
         deleteButton.className = 'btn btn-danger btn-sm';
         deleteButton.textContent = 'Usuń';
-        // Upewnij się, że activity posiada właściwość 'id'
         deleteButton.onclick = () => deleteRow(activity.id, row);
         actionsCell.appendChild(deleteButton);
+        // Przycisk "Zapisz" pojawi się dynamicznie
 
-        // Dodanie komórek do wiersza
         row.appendChild(projectCell);
         row.appendChild(activityCell);
         row.appendChild(descriptionCell);
@@ -93,30 +93,33 @@ function displayActivities(activities) {
         row.appendChild(rateCell);
         row.appendChild(actionsCell);
 
+        // Dodajemy event listener dla zmian w wierszu
+        row.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('change', () => ensureSaveButton(row));
+        });
+
         tableBody.appendChild(row);
     });
 }
 
-// Funkcja do tworzenia pola wyboru projektu
+// Tworzenie pola wyboru projektu
 function createProjectSelect(selectedProject) {
     const select = document.createElement('select');
     select.className = 'form-select';
-    const projects = ["Projekt A", "Projekt B", "Bez projektu"]; // Można to zmienić na dynamiczne projekty
+    const projects = ["Projekt A", "Projekt B", "Bez projektu"];
 
     projects.forEach(project => {
         const option = document.createElement('option');
         option.value = project;
         option.textContent = project;
-        if (project === selectedProject) {
-            option.selected = true;
-        }
+        if (project === selectedProject) option.selected = true;
         select.appendChild(option);
     });
 
     return select;
 }
 
-// Funkcja do tworzenia edytowalnego inputa
+// Tworzenie edytowalnego inputa
 function createEditableInput(value) {
     const input = document.createElement('input');
     input.type = 'text';
@@ -125,7 +128,7 @@ function createEditableInput(value) {
     return input;
 }
 
-// Funkcja do tworzenia checkboxa dla Billable
+// Tworzenie checkboxa dla Billable
 function createBillableCheckbox(checked) {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -133,7 +136,7 @@ function createBillableCheckbox(checked) {
     return checkbox;
 }
 
-// Funkcja do usuwania wiersza z API i UI
+// Usuwanie rekordu (API i UI)
 async function deleteRow(activityId, rowElement) {
     console.log(`Próba usunięcia rekordu o id: ${activityId}`);
     try {
@@ -149,19 +152,90 @@ async function deleteRow(activityId, rowElement) {
             alert("Błąd podczas usuwania rekordu.");
             return;
         }
-        console.log(`Rekord ${activityId} został usunięty z serwera.`);
+        console.log(`Rekord ${activityId} został usunięty.`);
         rowElement.remove();
     } catch (error) {
         console.error("Wyjątek podczas usuwania rekordu:", error);
     }
 }
 
-// Funkcja do dodawania nowego pustego wiersza
+// Zapisywanie zmian w wierszu
+async function saveRow(row) {
+    const id = row.dataset.id;
+    const cells = row.children;
+    const data = {
+        project: cells[0].querySelector('select').value,
+        name: cells[1].querySelector('input').value,
+        description: cells[2].querySelector('input').value,
+        billable: cells[3].querySelector('input').checked,
+        rate: cells[4].querySelector('input').value,
+    };
+
+    try {
+        let response;
+        if (id) {
+            console.log(`Aktualizacja rekordu ${id}:`, data);
+            response = await fetch(`${apiUrl}/api/activities/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+        } else {
+            console.log("Tworzenie nowego rekordu:", data);
+            response = await fetch(`${apiUrl}/api/activities`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+        }
+        if (!response.ok) {
+            console.error("Błąd podczas zapisywania rekordu:", response.statusText);
+            alert("Błąd podczas zapisywania rekordu.");
+            return;
+        }
+        const result = await response.json();
+        console.log("Zapisano rekord:", result);
+        if (!id && result.id) {
+            row.dataset.id = result.id;
+        }
+        removeSaveButton(row);
+    } catch (error) {
+        console.error("Wyjątek podczas zapisywania rekordu:", error);
+    }
+}
+
+// Dodaje przycisk "Zapisz", jeśli jeszcze nie istnieje
+function ensureSaveButton(row) {
+    const actionsCell = row.lastElementChild;
+    if (!actionsCell.querySelector('.btn-save')) {
+        const saveButton = document.createElement('button');
+        saveButton.className = 'btn btn-primary btn-sm btn-save';
+        saveButton.textContent = 'Zapisz';
+        saveButton.style.marginLeft = '5px';
+        saveButton.onclick = () => saveRow(row);
+        actionsCell.appendChild(saveButton);
+    }
+}
+
+// Usuwa przycisk "Zapisz"
+function removeSaveButton(row) {
+    const actionsCell = row.lastElementChild;
+    const saveButton = actionsCell.querySelector('.btn-save');
+    if (saveButton) saveButton.remove();
+}
+
+// Dodawanie nowego pustego wiersza
 function addRow() {
     const tableBody = document.querySelector('#activityTable tbody');
     const newRow = document.createElement('tr');
+    // Brak id – nowy rekord
 
-    // Nowe komórki (puste)
     const projectCell = document.createElement('td');
     const projectSelect = createProjectSelect("Bez projektu");
     projectCell.appendChild(projectSelect);
@@ -183,7 +257,6 @@ function addRow() {
     rateCell.appendChild(rateInput);
 
     const actionsCell = document.createElement('td');
-    // Dla nowo dodanego wiersza nie mamy jeszcze id, więc usuwanie działa tylko na UI
     const deleteButton = document.createElement('button');
     deleteButton.className = 'btn btn-danger btn-sm';
     deleteButton.textContent = 'Usuń';
@@ -199,6 +272,11 @@ function addRow() {
     newRow.appendChild(billableCell);
     newRow.appendChild(rateCell);
     newRow.appendChild(actionsCell);
+
+    // Monitoruj zmiany, aby dodać przycisk "Zapisz"
+    newRow.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('change', () => ensureSaveButton(newRow));
+    });
 
     tableBody.appendChild(newRow);
 }
